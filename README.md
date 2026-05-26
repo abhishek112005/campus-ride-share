@@ -1,108 +1,103 @@
 # 🚗 RideMate Campus
 
-> **A premium, verified campus ride-sharing platform built with modern web technologies**
+> **A premium, verified campus ride-sharing platform — safe, eco-friendly, and built for students**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com)
 
-RideMate Campus is a comprehensive ride-sharing solution designed specifically for college campuses. It connects verified students and faculty members for safe, eco-friendly rides with real-time tracking, smart matching, and parent notifications.
+RideMate Campus connects verified students and faculty for safe, daily campus commutes. Drivers post routes, passengers request rides, OTP verification ensures safety, and parent SMS alerts keep families informed — all in one polished, mobile-friendly web app.
 
 ---
 
 ## ✨ Features
 
-### 🔐 **Security & Verification**
-- College email verification (.edu domains)
-- Admin approval system for all users
-- Enhanced driver verification with license & confirmation letters
-- Parent phone number integration for safety alerts
-- Two-factor OTP verification before ride starts
+### 🔐 Security & Verification
+- Admin approval system for all users before platform access
+- Driver verification with license upload + confirmation letter
+- OTP verification before every ride starts
+- Parent phone number integration for automatic SMS alerts
 
-### 🚘 **Smart Ride Management**
-- **For Drivers:**
-  - Create one-time or recurring rides
-  - Accept/reject passenger requests
-  - Real-time GPS tracking with turn-by-turn navigation
-  - Live chat with passengers
-  - Automatic parent notifications (ride start, midway, completion)
-  
-- **For Passengers:**
-  - Search rides by destination with proximity sorting
-  - View driver ratings and vehicle details
-  - Real-time ride tracking
-  - In-ride chat functionality
-  - Secure payment integration
+### 🚘 Smart Ride Management
+- **Drivers** — create one-time or recurring rides, accept/reject passenger requests, start rides after OTP check, GPS live tracking
+- **Passengers** — search rides by destination, view driver ratings + vehicle info, receive a unique OTP on acceptance, real-time route map
 
-### 📍 **Advanced Tracking**
-- Live GPS tracking with 100m recalculation intervals
-- Parent tracking portal with read-only access
-- Turn-by-turn navigation powered by OpenRouteService
-- Offline route caching for network resilience
-- Distance-traveled monitoring with midway notifications
+### 📍 Live Tracking
+- GPS tracking with Leaflet maps
+- Parent tracking portal (read-only link sent via SMS)
+- OpenRouteService turn-by-turn directions
+- Auto SMS at ride start (Twilio)
 
-### 🚨 **Safety Features**
-- One-click SOS button sending alerts to all parents
-- Real-time location sharing
-- Driver rating and feedback system
-- Ride verification with unique OTPs
-- Emergency contact integration
+### 🌱 Eco Impact Dashboard
+- Track total fuel saved (L), CO₂ reduced (kg), and distance shared (km)
+- Per-ride breakdown and running goals
+- Equivalent trees metric
 
-### 🌱 **Eco Impact Dashboard**
-- Track fuel saved (liters)
-- Monitor carbon footprint reduction (kg)
-- Visualize total distance shared
-- Gamified eco-achievements
+### 🛡️ Admin Dashboard
+- Real-time pending approval alerts (Supabase Realtime)
+- One-click approve / reject for users and driver applications
+- Search + filter all users by status
+- View all rides with status timeline
+- No need to touch Supabase directly
 
-### 💳 **Payment & Ratings**
-- Distance-based fare calculation (₹8/km)
-- Stripe payment integration
-- Post-ride feedback and rating system
-- Payment status tracking
+### 💳 Payments & Ratings
+- Distance-based fare: ₹8/km, auto-calculated on request
+- Post-ride feedback and star rating for drivers
+- Payment status tracking per ride request
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Frontend (React + Vite)                  │
-├─────────────────────────────────────────────────────────────┤
-│  Pages          │  Components      │  Services              │
-│  • Auth         │  • EnhancedMap   │  • Supabase Client     │
-│  • Dashboard    │  • RideChat      │  • API Integrations    │
-│  • LiveTracking │  • FileUpload    │  • Realtime Channels   │
-│  • FindRides    │  • RidePayment   │                        │
-│  • Profile      │  • FeedbackForm  │                        │
-└─────────────────────────────────────────────────────────────┘
-                              ↕
-┌─────────────────────────────────────────────────────────────┐
-│                   Backend (Supabase)                         │
-├─────────────────────────────────────────────────────────────┤
-│  Database (PostgreSQL)  │  Edge Functions                   │
-│  • profiles             │  • publish-location               │
-│  • rides                │  • get-directions                 │
-│  • ride_requests        │  • send-sos-sms                   │
-│  • driver_details       │  • send-ride-update-sms           │
-│  • eco_impact           │  • send-location-sms              │
-│  • feedback             │                                   │
-│                         │  Storage Buckets                  │
-│  Realtime Channels      │  • profile-photos                 │
-│  • location-updates     │  • driver-documents               │
-│  • ride-status          │                                   │
-└─────────────────────────────────────────────────────────────┘
-                              ↕
-┌─────────────────────────────────────────────────────────────┐
-│                   External APIs                              │
-├─────────────────────────────────────────────────────────────┤
-│  • OpenRouteService (ORS) - Turn-by-turn directions         │
-│  • Twilio - SMS notifications to parents                    │
-│  • Pusher - Real-time location broadcasting                 │
-│  • Stripe - Payment processing                              │
-│  • Nominatim - Address geocoding                            │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                   Frontend (React + Vite)                     │
+├──────────────────────────────────────────────────────────────┤
+│  Pages                   │  Components        │  Design       │
+│  • Index (Landing)       │  • Navbar          │  Inter font   │
+│  • Auth                  │  • SimpleMap       │  Tailwind CSS │
+│  • Dashboard             │  • FileUpload      │  shadcn/ui    │
+│  • FindRides             │  • RidePayment     │  CSS vars     │
+│  • MyRides               │  • FeedbackForm    │  Glassmorphism│
+│  • PassengerRides        │  • RideChat        │  Animations   │
+│  • LiveTracking          │                    │               │
+│  • Profile               │                    │               │
+│  • BecomeDriver          │                    │               │
+│  • EcoImpact             │                    │               │
+│  • AdminDashboard        │                    │               │
+└──────────────────────────────────────────────────────────────┘
+                               ↕
+┌──────────────────────────────────────────────────────────────┐
+│                    Backend (Supabase)                         │
+├──────────────────────────────────────────────────────────────┤
+│  PostgreSQL + RLS        │  Edge Functions                   │
+│  • profiles              │  • send-location-sms              │
+│  • rides                 │  • send-sos-sms                   │
+│  • ride_requests         │  • get-directions                 │
+│  • driver_details        │  • publish-location               │
+│  • ride_preferences      │                                   │
+│  • driver_ratings        │  Storage Buckets                  │
+│  • eco_impact            │  • profile-photos                 │
+│  • feedback              │  • driver-documents               │
+│  • user_roles            │                                   │
+│                          │  Realtime Channels                │
+│                          │  • profiles, driver_details,      │
+│                          │    rides (admin live updates)     │
+└──────────────────────────────────────────────────────────────┘
+                               ↕
+┌──────────────────────────────────────────────────────────────┐
+│                    External APIs                              │
+├──────────────────────────────────────────────────────────────┤
+│  • Nominatim — address geocoding (free, no key needed)       │
+│  • Leaflet / OpenStreetMap — map rendering                   │
+│  • OpenRouteService — turn-by-turn directions                │
+│  • Twilio — SMS notifications to parents                     │
+│  • Pusher — real-time location broadcasting                  │
+│  • Stripe — payment processing                               │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -111,56 +106,39 @@ RideMate Campus is a comprehensive ride-sharing solution designed specifically f
 
 ### Prerequisites
 - Node.js 18+ and npm
-- Supabase account
-- API keys for: Twilio, Pusher, Stripe, OpenRouteService
+- Supabase account (free tier works)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/ridemate-campus.git
-cd ridemate-campus
+git clone https://github.com/abhishek112005/campus-ride-share.git
+cd campus-ride-share
 
 # Install dependencies
 npm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your API keys
+# Fill in your Supabase URL and anon key
 
 # Run development server
 npm run dev
-
-# Build for production
-npm run build
 ```
 
 ### Environment Variables
 
-Create a `.env` file in the root directory:
-
 ```env
-# Supabase
-VITE_SUPABASE_URL=your_supabase_url
+# Required
+VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_key
 
-# Twilio (for SMS)
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_token
-TWILIO_PHONE_NUMBER=your_twilio_phone
+# Optional — real-time GPS tracking
+VITE_PUSHER_KEY=your_pusher_key
+VITE_PUSHER_CLUSTER=your_pusher_cluster
 
-# Pusher (for real-time tracking)
-PUSHER_APP_ID=your_pusher_app_id
-PUSHER_KEY=your_pusher_key
-PUSHER_SECRET=your_pusher_secret
-PUSHER_CLUSTER=your_pusher_cluster
-
-# Stripe (for payments)
-STRIPE_PUBLISHABLE_KEY=your_stripe_key
-STRIPE_SECRET_KEY=your_stripe_secret
-
-# OpenRouteService (for directions)
-ORS_API_KEY=your_ors_api_key
+# Optional — payments
+VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
 ```
 
 ---
@@ -168,337 +146,206 @@ ORS_API_KEY=your_ors_api_key
 ## 📁 Project Structure
 
 ```
-ridemate-campus/
+campus-ride-share/
 ├── src/
-│   ├── components/          # Reusable UI components
-│   │   ├── ui/             # shadcn/ui components
-│   │   ├── EnhancedMap.tsx # Advanced map with clustering
-│   │   ├── RideChat.tsx    # Real-time chat component
-│   │   ├── FileUpload.tsx  # File upload to Supabase Storage
-│   │   └── ...
-│   ├── pages/              # Route components
-│   │   ├── Auth.tsx        # Sign in/Sign up
-│   │   ├── Dashboard.tsx   # Main dashboard
-│   │   ├── CreateRide.tsx  # Driver: Create new ride
-│   │   ├── FindRides.tsx   # Passenger: Search rides
-│   │   ├── MyRides.tsx     # Driver: Manage rides
-│   │   ├── PassengerRides.tsx # Passenger: View requests
-│   │   ├── LiveTracking.tsx   # Driver: Live GPS tracking
-│   │   ├── ParentTracking.tsx # Parent: Read-only tracking
-│   │   ├── Profile.tsx     # User profile management
-│   │   ├── BecomeDriver.tsx # Driver application
-│   │   ├── EcoImpact.tsx   # Eco statistics
-│   │   └── ...
-│   ├── integrations/
-│   │   └── supabase/
-│   │       └── client.ts   # Supabase client configuration
-│   ├── lib/
-│   │   ├── rideMatching.ts # Smart ride matching logic
-│   │   └── utils.ts        # Helper functions
+│   ├── components/
+│   │   ├── ui/                  # shadcn/ui primitives
+│   │   ├── Navbar.tsx           # Sticky glass navbar with role badges
+│   │   ├── SimpleMap.tsx        # Leaflet map component
+│   │   ├── FileUpload.tsx       # Supabase Storage upload
+│   │   ├── RidePayment.tsx      # Stripe payment flow
+│   │   ├── FeedbackForm.tsx     # Post-ride rating
+│   │   └── RideChat.tsx         # In-ride chat
+│   ├── pages/
+│   │   ├── Index.tsx            # Public landing page
+│   │   ├── Auth.tsx             # Sign in / Sign up
+│   │   ├── Dashboard.tsx        # Personalized home
+│   │   ├── FindRides.tsx        # Search & request rides
+│   │   ├── MyRides.tsx          # Driver ride management
+│   │   ├── PassengerRides.tsx   # Passenger request tracking
+│   │   ├── CreateRide.tsx       # Create a new ride
+│   │   ├── LiveTracking.tsx     # GPS live tracking
+│   │   ├── ParentTracking.tsx   # Read-only parent view
+│   │   ├── Profile.tsx          # Profile & preferences
+│   │   ├── BecomeDriver.tsx     # Driver application form
+│   │   ├── EcoImpact.tsx        # Environmental stats
+│   │   └── AdminDashboard.tsx   # Admin control panel
+│   ├── integrations/supabase/
+│   │   └── client.ts            # Supabase client
 │   ├── hooks/
-│   │   ├── use-toast.ts    # Toast notifications
-│   │   └── use-mobile.tsx  # Mobile detection
-│   ├── App.tsx             # Root component with routes
-│   ├── main.tsx            # Entry point
-│   └── index.css           # Global styles
+│   │   └── use-toast.ts
+│   ├── App.css                  # Design system (tokens, utilities)
+│   ├── App.tsx                  # Routes
+│   └── main.tsx
 ├── supabase/
-│   ├── functions/          # Edge Functions
-│   │   ├── publish-location/
-│   │   ├── get-directions/
-│   │   ├── send-sos-sms/
-│   │   └── ...
-│   └── migrations/         # Database migrations
-├── public/                 # Static assets
-├── package.json
+│   ├── functions/               # Edge Functions (SMS, directions, SOS)
+│   └── migrations/              # DB migrations
+├── vercel.json                  # SPA routing config
 ├── vite.config.ts
-├── tsconfig.json
 └── tailwind.config.ts
 ```
 
 ---
 
-## 🔑 Key Technologies
+## 🔑 Tech Stack
 
 | Technology | Purpose | Version |
-|------------|---------|---------|
+|---|---|---|
 | **React** | UI Framework | 18.3+ |
-| **TypeScript** | Type Safety | 5.5+ |
+| **TypeScript** | Type Safety | 5.8+ |
 | **Vite** | Build Tool | 5.4+ |
-| **Supabase** | Backend (Auth, DB, Realtime, Storage) | Latest |
+| **Supabase** | Auth, DB, Realtime, Storage | Latest |
 | **Tailwind CSS** | Styling | 3.4+ |
 | **shadcn/ui** | UI Components | Latest |
-| **Leaflet** | Map Rendering | 1.9+ |
-| **React Query** | Data Fetching | 5.56+ |
-| **date-fns** | Date Formatting | 4.1+ |
-| **Lucide React** | Icons | 0.263+ |
-
----
-
-## 🗄️ Database Schema
-
-### Core Tables
-
-**profiles**
-- User information (name, phone, gender, photo)
-- Primary location coordinates
-- User type (student/faculty)
-- Driver status and approval
-
-**rides**
-- Start/end locations with coordinates
-- Scheduled time
-- Available seats
-- Status (scheduled, active, completed)
-- Recurring ride flag
-
-**ride_requests**
-- Links passengers to rides
-- Pickup location
-- Status (pending, accepted, rejected)
-- OTP for verification
-- Distance and fare calculation
-- Payment status
-
-**driver_details**
-- License information
-- Vehicle details
-- Confirmation letter
-- Approval status
-
-**eco_impact**
-- Distance shared
-- Fuel saved
-- Carbon reduced
-
-**feedback**
-- Passenger ratings
-- Driver ratings
-- Comments
+| **Leaflet** | Maps | 1.9+ |
+| **React Query** | Data Fetching | 5+ |
+| **date-fns** | Date Formatting | 3+ |
+| **Lucide React** | Icons | 0.462+ |
 
 ---
 
 ## 🔄 Key User Flows
 
-### 1. Student Sign-Up Flow
+### Student Sign-Up
 ```
-User enters college email (.edu) → Email verification → 
-Admin approval → Profile setup → Ready to use
-```
-
-### 2. Become Driver Flow
-```
-Apply with license → Upload documents → Submit parent contact → 
-Admin verification → Driver approval → Can create rides
+Register with email → Email verification → Admin approval → Profile setup → Use platform
 ```
 
-### 3. Request Ride Flow (Passenger)
+### Become a Driver
 ```
-Search destination → View nearby rides → Request ride → 
-Driver accepts → Receive OTP → Share OTP → Ride starts → 
-Live tracking → Ride completes → Payment → Rate driver
-```
-
-### 4. Create Ride Flow (Driver)
-```
-Create ride details → Set route → Accept requests → 
-Collect OTPs → Start ride → GPS tracking → Auto SMS notifications → 
-Complete ride → Rate passengers
+Fill application → Upload license + letter → Submit parent contact →
+Admin reviews documents → Approved → Can create rides
 ```
 
-### 5. Live Tracking Flow
+### Passenger Requests a Ride
 ```
-Driver starts GPS → Publishes location every 5s → 
-Passengers/Parents receive updates via Pusher → 
-Turn-by-turn directions update every 100m → 
-Midway SMS sent at 50% → Completion SMS on arrival
+Search destination → Browse rides with driver rating →
+Request ride → Driver accepts → OTP delivered →
+Share OTP at pickup → Live tracking → Complete → Rate driver
+```
+
+### Driver Starts a Ride
+```
+Accept requests → Collect OTPs → Verify in app → 
+Parent SMS sent automatically → GPS tracking starts →
+Complete → Eco impact logged
 ```
 
 ---
 
-## 🔒 Security Features
+## 🛡️ Admin Setup
 
-- **Authentication**: Supabase Auth with email verification
-- **Authorization**: Row Level Security (RLS) on all tables
-- **Data Validation**: Server-side validation in Edge Functions
-- **File Upload**: Secure storage with signed URLs
-- **API Keys**: Environment-based configuration
-- **Rate Limiting**: Supabase Edge Function limits
-- **HTTPS**: Enforced on all connections
-- **Input Sanitization**: XSS protection on all inputs
+To grant admin access, insert one row into `user_roles` in Supabase:
 
----
-
-## 🧪 Testing
-
-```bash
-# Run unit tests (when implemented)
-npm run test
-
-# Run E2E tests (when implemented)
-npm run test:e2e
-
-# Type checking
-npm run type-check
-
-# Linting
-npm run lint
+```sql
+INSERT INTO user_roles (user_id, role)
+VALUES ('your-user-uuid', 'admin');
 ```
 
----
-
-## 📱 Mobile Responsiveness
-
-The application is fully responsive with:
-- Mobile-first design approach
-- Touch-optimized UI elements
-- Adaptive layouts for all screen sizes
-- Progressive Web App (PWA) capabilities
-- Offline route caching
-
----
-
-## 🌍 Browser Support
-
-| Browser | Version |
-|---------|---------|
-| Chrome | 90+ |
-| Firefox | 88+ |
-| Safari | 14+ |
-| Edge | 90+ |
+Find your UUID under **Supabase → Authentication → Users**.  
+After re-login, the **Admin** tab appears in the navbar.
 
 ---
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
+Deployed on **Vercel**. The `vercel.json` handles SPA client-side routing.
 
 ```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy
-vercel --prod
-```
-
-### Netlify
-
-```bash
-# Install Netlify CLI
-npm i -g netlify-cli
-
-# Deploy
-netlify deploy --prod
-```
-
-### Manual Build
-
-```bash
+# Build for production
 npm run build
-# Deploy the 'dist' folder to any static host
+
+# Preview production build locally
+npm run preview
 ```
 
-### Supabase Edge Functions
-
-```bash
-# Install Supabase CLI
-npm install -g supabase
-
-# Login
-supabase login
-
-# Link project
-supabase link --project-ref your-project-ref
-
-# Deploy functions
-supabase functions deploy
-```
+After deploying, update **Supabase → Authentication → URL Configuration**:
+- **Site URL** → your Vercel URL
+- **Redirect URLs** → `https://your-app.vercel.app/**`
 
 ---
 
-## 🤝 Contributing
+## 🔮 Future Implementations
 
-We welcome contributions! Please follow these steps:
+### Authentication
+- [ ] **Google OAuth** — one-click sign-in with Google
+- [ ] **GitHub / Microsoft OAuth** — for broader campus login options
+- [ ] **Magic link login** — passwordless email login
+- [ ] **College SSO** — single sign-on via institutional portals
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Real-Time Features
+- [ ] **Live location sharing** — driver location updates every 5s via Pusher/WebSockets
+- [ ] **Real-time in-ride chat** — driver ↔ passenger messaging during ride
+- [ ] **Live seat availability** — seat count updates instantly as requests are accepted
+- [ ] **Push notifications** — browser/PWA notifications for request accepted, ride starting, etc.
+- [ ] **Real-time admin dashboard** — live ride monitoring with driver positions on map
 
-### Code Standards
-- Follow TypeScript best practices
-- Use Prettier for formatting
-- Write meaningful commit messages
-- Add comments for complex logic
-- Update documentation for new features
+### Maps & Navigation
+- [ ] **Interactive pickup point selection** — tap on map to set exact pickup
+- [ ] **Route preview before requesting** — show the driver's planned route on the ride card
+- [ ] **ETA calculation** — live ETA for passenger based on driver's current GPS position
+- [ ] **Cluster map view** — admin sees all active rides on a single map
 
----
+### Payments
+- [ ] **UPI integration** — pay via GPay, PhonePe, Paytm
+- [ ] **Wallet system** — pre-load credits, auto-deduct on ride completion
+- [ ] **Split fare** — divide cost across multiple passengers automatically
+- [ ] **Refund flow** — auto-refund on driver cancellation
 
-## 🐛 Known Issues & Limitations
+### Rides & Matching
+- [ ] **AI ride matching** — suggest best rides based on location history and preferences
+- [ ] **Recurring ride scheduler** — auto-post daily/weekly rides
+- [ ] **Waitlist** — join a queue if a ride is full; auto-notify when seat opens
+- [ ] **Ride pooling** — match multiple passengers on similar routes
 
-- GPS accuracy depends on device capabilities
-- Offline mode limited to cached routes only
-- SMS delivery depends on Twilio service availability
-- Real-time updates require stable internet connection
-- Payment processing requires KYC verification
+### Safety
+- [ ] **SOS button** — one tap sends live location to all emergency contacts via SMS
+- [ ] **Background location** — passive tracking even when app is minimised
+- [ ] **In-app emergency call** — direct dial to college security from ride screen
+- [ ] **Driver behaviour scoring** — flag harsh braking or speeding events
 
----
+### Student Experience
+- [ ] **Leaderboard** — top eco contributors each month
+- [ ] **Carbon credit rewards** — earn points redeemable for campus perks
+- [ ] **Ride history export** — PDF/CSV of all past rides and expenses
+- [ ] **Multi-language support** — Hindi, Telugu, Tamil
 
-## 📋 Roadmap
-
-- [ ] Multi-language support (Hindi, Telugu, Tamil)
-- [ ] In-app voice calls between driver and passenger
-- [ ] AI-powered ride matching based on preferences
-- [ ] Carbon credits and rewards system
-- [ ] Integration with campus event calendars
-- [ ] Split payment for group rides
-- [ ] Driver behavior analytics
-- [ ] Emergency contact auto-dial feature
-- [ ] Ride scheduling 7 days in advance
-- [ ] Native mobile apps (iOS/Android)
+### Platform
+- [ ] **Native mobile apps** — React Native iOS + Android
+- [ ] **PWA with offline support** — use core features without internet
+- [ ] **Driver earnings dashboard** — track monthly earnings, rides, and ratings
+- [ ] **Analytics panel** — admin graphs for ride volume, popular routes, peak hours
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License — see [LICENSE](LICENSE) for details.
 
 ---
 
-## 👥 Team & Contact
+## 👤 Author
 
-**Project Maintainer**: Your Name  
-**Email**: your.email@example.com  
-**GitHub**: [@yourusername](https://github.com/yourusername)  
-**Website**: [ridemate-campus.com](https://ridemate-campus.com)
-
-For support, email support@ridemate-campus.com or join our [Discord community](https://discord.gg/yourserver).
+**Abhishek Pothanagari**  
+[![GitHub](https://img.shields.io/badge/GitHub-abhishek112005-181717?style=flat&logo=github)](https://github.com/abhishek112005)
 
 ---
 
 ## 🙏 Acknowledgments
 
-- **shadcn/ui** for beautiful UI components
-- **Supabase** for the amazing backend platform
-- **OpenRouteService** for routing capabilities
-- **Twilio** for reliable SMS delivery
-- **Leaflet** for powerful mapping
-- All contributors and testers
-
----
-
-## 📊 Project Stats
-
-![GitHub stars](https://img.shields.io/github/stars/yourusername/ridemate-campus?style=social)
-![GitHub forks](https://img.shields.io/github/forks/yourusername/ridemate-campus?style=social)
-![GitHub issues](https://img.shields.io/github/issues/yourusername/ridemate-campus)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/yourusername/ridemate-campus)
-![GitHub last commit](https://img.shields.io/github/last-commit/yourusername/ridemate-campus)
+- [shadcn/ui](https://ui.shadcn.com/) — beautiful, accessible UI components
+- [Supabase](https://supabase.com/) — open-source Firebase alternative
+- [Leaflet](https://leafletjs.com/) — lightweight, powerful maps
+- [OpenRouteService](https://openrouteservice.org/) — free routing API
+- [Nominatim](https://nominatim.org/) — free geocoding by OpenStreetMap
+- [Twilio](https://www.twilio.com/) — SMS delivery for parent alerts
 
 ---
 
 <div align="center">
 
-[⬆ back to top](#-ridemate-campus)
+Built with ❤️ for safer campus commutes
+
+[⬆ Back to top](#-ridemate-campus)
 
 </div>
