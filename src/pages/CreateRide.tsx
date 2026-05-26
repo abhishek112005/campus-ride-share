@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, MapPin, AlertCircle, Info } from "lucide-react";
+import { Loader2, MapPin, AlertCircle, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 // Hyderabad city center coordinates
@@ -261,18 +261,9 @@ const CreateRide = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Create a Ride</h1>
-        </div>
-      </header>
-
+    <div className="bg-background">
       <div className="container mx-auto px-4 py-8 max-w-2xl">
+        <h1 className="text-2xl font-bold mb-6">Create a Ride</h1>
         {/* Service Area Information */}
         <Alert className="mb-6 border-primary/50 bg-primary/5">
           <Info className="h-4 w-4" />

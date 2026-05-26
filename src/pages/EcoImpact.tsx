@@ -4,375 +4,270 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowLeft, Leaf, Droplet, TreeDeciduous } from "lucide-react";
+import { Loader2, Leaf, Droplet, TreeDeciduous, Car, ArrowRight, TrendingUp } from "lucide-react";
 
 const EcoImpact = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
-  const [impact, setImpact] = useState({
-    totalDistance: 0,
-    fuelSaved: 0,
-    carbonReduced: 0,
-    ridesShared: 0,
-    ridesAsDriver: 0,
-    ridesAsPassenger: 0,
-  });
+  const [impact, setImpact] = useState({ totalDistance: 0, fuelSaved: 0, carbonReduced: 0, ridesShared: 0, ridesAsDriver: 0, ridesAsPassenger: 0 });
 
-  useEffect(() => {
-    fetchEcoImpact();
-  }, []);
+  useEffect(() => { fetchEcoImpact(); }, []);
 
   const fetchEcoImpact = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) {
-      navigate("/auth");
-      return;
-    }
+    if (!session?.user) { navigate("/auth"); return; }
 
     try {
-      // Fetch rides where user is the driver (completed rides)
       const { data: driverRides, error: driverError } = await supabase
         .from("rides")
-        .select(`
-          *,
-          ride_requests!inner(
-            distance_km,
-            status
-          )
-        `)
-        .eq("driver_id", session.user.id)
-        .eq("status", "completed")
-        .eq("ride_requests.status", "accepted");
+        .select(`*, ride_requests!inner(distance_km, status)`)
+        .eq("driver_id", session.user.id).eq("status", "completed").eq("ride_requests.status", "accepted");
 
-      // Fetch ride requests where user is the passenger (completed rides)
       const { data: passengerRequests, error: passengerError } = await supabase
         .from("ride_requests")
-        .select(`
-          *,
-          ride:rides!inner(
-            status
-          )
-        `)
-        .eq("passenger_id", session.user.id)
-        .eq("status", "accepted")
-        .eq("ride.status", "completed");
+        .select(`*, ride:rides!inner(status)`)
+        .eq("passenger_id", session.user.id).eq("status", "accepted").eq("ride.status", "completed");
 
-      if (driverError) {
-        console.error("Error fetching driver rides:", driverError);
-      }
+      if (driverError) console.error("Driver rides error:", driverError);
+      if (passengerError) console.error("Passenger rides error:", passengerError);
 
-      if (passengerError) {
-        console.error("Error fetching passenger rides:", passengerError);
-      }
+      let totalDistance = 0, ridesAsDriver = 0, ridesAsPassenger = 0;
 
-      let totalDistance = 0;
-      let ridesAsDriver = 0;
-      let ridesAsPassenger = 0;
-
-      // Calculate from driver rides
-      if (driverRides && driverRides.length > 0) {
-        driverRides.forEach((ride) => {
-          if (ride.ride_requests && ride.ride_requests.length > 0) {
-            ride.ride_requests.forEach((request: any) => {
-              if (request.distance_km) {
-                totalDistance += request.distance_km;
-              }
-            });
-            ridesAsDriver += 1;
+      if (driverRides?.length) {
+        driverRides.forEach(ride => {
+          if (ride.ride_requests?.length) {
+            ride.ride_requests.forEach((req: any) => { if (req.distance_km) totalDistance += req.distance_km; });
+            ridesAsDriver++;
           }
         });
       }
 
-      // Calculate from passenger rides
-      if (passengerRequests && passengerRequests.length > 0) {
-        passengerRequests.forEach((request) => {
-          if (request.distance_km) {
-            totalDistance += request.distance_km;
-          }
-          ridesAsPassenger += 1;
+      if (passengerRequests?.length) {
+        passengerRequests.forEach(req => {
+          if (req.distance_km) totalDistance += req.distance_km;
+          ridesAsPassenger++;
         });
       }
 
-      // Calculate eco metrics
-      // Average fuel consumption: 0.08 liters per km (12.5 km/L)
-      // By sharing, we save approximately 50% of fuel per person
       const fuelSaved = totalDistance * 0.08 * 0.5;
-      
-      // Carbon emissions: 2.3 kg CO2 per liter of gasoline
       const carbonReduced = fuelSaved * 2.3;
 
-      setImpact({
-        totalDistance: totalDistance,
-        fuelSaved: fuelSaved,
-        carbonReduced: carbonReduced,
-        ridesShared: ridesAsDriver + ridesAsPassenger,
-        ridesAsDriver: ridesAsDriver,
-        ridesAsPassenger: ridesAsPassenger,
-      });
+      setImpact({ totalDistance, fuelSaved, carbonReduced, ridesShared: ridesAsDriver + ridesAsPassenger, ridesAsDriver, ridesAsPassenger });
 
-      // If no data found, check the eco_impact table as fallback
       if (totalDistance === 0) {
-        const { data: ecoData, error: ecoError } = await supabase
-          .from("eco_impact")
-          .select("*")
-          .eq("user_id", session.user.id);
-
-        if (!ecoError && ecoData && ecoData.length > 0) {
-          const totals = ecoData.reduce(
-            (acc, curr) => ({
-              totalDistance: acc.totalDistance + (curr.distance_shared_km || 0),
-              fuelSaved: acc.fuelSaved + (curr.fuel_saved_liters || 0),
-              carbonReduced: acc.carbonReduced + (curr.carbon_reduced_kg || 0),
-              ridesShared: acc.ridesShared + 1,
-            }),
-            { totalDistance: 0, fuelSaved: 0, carbonReduced: 0, ridesShared: 0 }
-          );
-          
-          setImpact({
-            ...totals,
-            ridesAsDriver: 0,
-            ridesAsPassenger: 0,
-          });
+        const { data: ecoData, error: ecoError } = await supabase.from("eco_impact").select("*").eq("user_id", session.user.id);
+        if (!ecoError && ecoData?.length) {
+          const totals = ecoData.reduce((acc, curr) => ({
+            totalDistance: acc.totalDistance + (curr.distance_shared_km || 0),
+            fuelSaved: acc.fuelSaved + (curr.fuel_saved_liters || 0),
+            carbonReduced: acc.carbonReduced + (curr.carbon_reduced_kg || 0),
+            ridesShared: acc.ridesShared + 1,
+          }), { totalDistance: 0, fuelSaved: 0, carbonReduced: 0, ridesShared: 0 });
+          setImpact({ ...totals, ridesAsDriver: 0, ridesAsPassenger: 0 });
         }
       }
     } catch (error) {
       console.error("Error calculating eco impact:", error);
-      toast({
-        title: "Error",
-        description: "Failed to calculate eco impact",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to calculate eco impact", variant: "destructive" });
     }
-
     setLoading(false);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
+  const hasData = impact.ridesShared > 0;
+
+  const statCards = [
+    {
+      icon: Droplet,
+      value: `${impact.fuelSaved.toFixed(1)} L`,
+      label: "Fuel Saved",
+      sub: `₹${(impact.fuelSaved * 100).toFixed(0)} saved in fuel costs`,
+      gradientClass: "from-blue-500 to-blue-600",
+      bg: "bg-blue-50",
+      textColor: "text-blue-700",
+    },
+    {
+      icon: TreeDeciduous,
+      value: `${impact.carbonReduced.toFixed(1)} kg`,
+      label: "CO₂ Reduced",
+      sub: `≈ ${(impact.carbonReduced / 20).toFixed(1)} trees worth`,
+      gradientClass: "from-emerald-500 to-green-600",
+      bg: "bg-emerald-50",
+      textColor: "text-emerald-700",
+    },
+    {
+      icon: Car,
+      value: `${impact.totalDistance.toFixed(0)} km`,
+      label: "Distance Shared",
+      sub: `Across ${impact.ridesShared} shared rides`,
+      gradientClass: "from-violet-500 to-violet-600",
+      bg: "bg-violet-50",
+      textColor: "text-violet-700",
+    },
+    {
+      icon: TrendingUp,
+      value: impact.ridesShared.toString(),
+      label: "Total Rides",
+      sub: "Building a sustainable campus",
+      gradientClass: "from-orange-500 to-amber-500",
+      bg: "bg-orange-50",
+      textColor: "text-orange-700",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
-          </Button>
-          <h1 className="text-2xl font-bold">Your Eco Impact</h1>
+    <div>
+      {/* ── Page Hero ── */}
+      <div className="page-hero" style={{ background: "linear-gradient(135deg, hsl(152, 60%, 94%) 0%, white 55%)" }}>
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-eco flex items-center justify-center shadow-md">
+              <Leaf className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight">Your Eco Impact</h1>
+              <p className="text-sm text-muted-foreground">Every shared ride makes a difference 🌱</p>
+            </div>
+          </div>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {impact.ridesShared === 0 ? (
-          <Card className="mb-8 border-primary/50">
-            <CardHeader>
-              <CardTitle className="text-2xl flex items-center gap-3">
-                <Leaf className="h-8 w-8 text-primary" />
-                Start Your Eco Journey
-              </CardTitle>
-              <CardDescription>
-                Complete your first ride to see your environmental impact!
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <p className="text-muted-foreground">
-                  Every ride you share helps reduce carbon emissions and fuel consumption. 
-                  Start making a difference today!
+
+        {!hasData ? (
+          /* ── Empty State ── */
+          <div className="space-y-6">
+            <Card className="border-0 shadow-sm overflow-hidden">
+              <div className="h-1 w-full bg-gradient-eco" />
+              <CardContent className="py-12 text-center">
+                <div className="w-20 h-20 rounded-3xl bg-gradient-eco flex items-center justify-center mx-auto mb-5 shadow-lg">
+                  <Leaf className="h-10 w-10 text-white" />
+                </div>
+                <h2 className="text-2xl font-extrabold text-foreground mb-2">Start Your Eco Journey</h2>
+                <p className="text-muted-foreground max-w-sm mx-auto mb-6 leading-relaxed">
+                  Complete your first shared ride to see your environmental impact. Every kilometer counts!
                 </p>
-                <div className="flex gap-4">
-                  <Button onClick={() => navigate("/find-rides")}>
-                    Find a Ride
+                <div className="flex gap-3 justify-center">
+                  <Button className="btn-primary font-semibold" onClick={() => navigate("/find-rides")}>
+                    Find a Ride <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Button>
-                  <Button variant="outline" onClick={() => navigate("/create-ride")}>
+                  <Button variant="outline" className="font-semibold" onClick={() => navigate("/create-ride")}>
                     Offer a Ride
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <Card className="mb-8 bg-gradient-eco text-success-foreground">
-              <CardHeader>
-                <CardTitle className="text-3xl flex items-center gap-3">
-                  <Leaf className="h-8 w-8" />
-                  Making a Difference
-                </CardTitle>
-                <CardDescription className="text-success-foreground/80">
-                  Your contribution to a sustainable campus
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-success-foreground/90">
-                <div className="flex gap-4 text-sm">
-                  <span>🚗 {impact.ridesAsDriver} rides as driver</span>
-                  <span>👥 {impact.ridesAsPassenger} rides as passenger</span>
-                </div>
               </CardContent>
             </Card>
 
-            <div className="grid md:grid-cols-2 gap-6 mb-8">
-              <Card className="hover:shadow-lg-primary transition-all">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-                      <Droplet className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-2xl">
-                        {impact.fuelSaved.toFixed(1)} L
-                      </CardTitle>
-                      <CardDescription>Fuel Saved</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Equivalent to {(impact.fuelSaved * 1.5).toFixed(0)} hours of driving
-                  </p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    💰 Saved ₹{(impact.fuelSaved * 100).toFixed(0)} in fuel costs
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-lg-success transition-all">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-success/20 rounded-lg flex items-center justify-center">
-                      <TreeDeciduous className="h-6 w-6 text-success" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-2xl">
-                        {impact.carbonReduced.toFixed(1)} kg
-                      </CardTitle>
-                      <CardDescription>CO₂ Reduced</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Equivalent to {(impact.carbonReduced / 20).toFixed(1)} trees planted
-                  </p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    🌱 That's {(impact.carbonReduced / 0.4).toFixed(0)} km of tree growth!
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-lg transition-all">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center">
-                      <Leaf className="h-6 w-6 text-secondary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-2xl">
-                        {impact.totalDistance.toFixed(0)} km
-                      </CardTitle>
-                      <CardDescription>Distance Shared</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Across {impact.ridesShared} shared rides
-                  </p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    🗺️ That's like traveling from Delhi to {impact.totalDistance > 1000 ? 'Mumbai' : 'Jaipur'}!
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-lg transition-all">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center">
-                      <span className="text-2xl">🚗</span>
-                    </div>
-                    <div>
-                      <CardTitle className="text-2xl">{impact.ridesShared}</CardTitle>
-                      <CardDescription>Total Rides</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Building a sustainable community
-                  </p>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    🎉 Keep up the great work!
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card className="mb-6">
+            {/* Potential impact preview */}
+            <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-50 to-white">
               <CardHeader>
-                <CardTitle>Your Impact Breakdown</CardTitle>
-                <CardDescription>
-                  See how your contributions add up
-                </CardDescription>
+                <CardTitle className="text-base font-bold text-emerald-800">🌍 Your Potential Impact</CardTitle>
+                <CardDescription>If you share just 10 rides of 15 km each:</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                    <span className="text-sm font-medium">Average distance per ride</span>
-                    <span className="text-sm text-muted-foreground">
-                      {impact.ridesShared > 0 ? (impact.totalDistance / impact.ridesShared).toFixed(1) : 0} km
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                    <span className="text-sm font-medium">CO₂ saved per ride</span>
-                    <span className="text-sm text-muted-foreground">
-                      {impact.ridesShared > 0 ? (impact.carbonReduced / impact.ridesShared).toFixed(2) : 0} kg
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                    <span className="text-sm font-medium">Fuel saved per ride</span>
-                    <span className="text-sm text-muted-foreground">
-                      {impact.ridesShared > 0 ? (impact.fuelSaved / impact.ridesShared).toFixed(2) : 0} L
-                    </span>
-                  </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  {[{ v: "6 L", l: "Fuel saved" }, { v: "13.8 kg", l: "CO₂ reduced" }, { v: "0.7", l: "Trees equivalent" }].map(({ v, l }) => (
+                    <div key={l} className="bg-white/70 rounded-2xl p-3 border border-emerald-100">
+                      <p className="text-xl font-extrabold text-emerald-700">{v}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{l}</p>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
-          </>
+          </div>
+        ) : (
+          /* ── With Data ── */
+          <div className="space-y-6">
+            {/* Summary Banner */}
+            <div className="rounded-3xl p-6 text-white relative overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(145,78%,36%) 0%, hsl(158,79%,28%) 100%)" }}>
+              <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-20" style={{ background: "radial-gradient(circle, white 0%, transparent 70%)", transform: "translate(20%, -20%)" }} />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-3">
+                  <Leaf className="h-5 w-5 text-emerald-200" />
+                  <p className="font-bold text-emerald-100">Making a Difference</p>
+                </div>
+                <p className="text-3xl font-extrabold tracking-tight mb-1">
+                  {impact.ridesShared} Shared Rides
+                </p>
+                <p className="text-emerald-200 text-sm">
+                  🚗 {impact.ridesAsDriver} as driver · 👥 {impact.ridesAsPassenger} as passenger
+                </p>
+              </div>
+            </div>
+
+            {/* Stat Cards */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {statCards.map(({ icon: Icon, value, label, sub, gradientClass, bg, textColor }, i) => (
+                <Card key={label} className={`border-0 shadow-sm overflow-hidden stagger-${i+1} animate-fadeInUp`}>
+                  <CardContent className="pt-5 pb-5">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${gradientClass} flex items-center justify-center shadow-md shrink-0`}>
+                        <Icon className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-2xl font-extrabold tracking-tight ${textColor}`}>{value}</p>
+                        <p className="text-sm font-semibold text-foreground">{label}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Breakdown */}
+            <Card className="border-0 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-bold">Impact Breakdown</CardTitle>
+                <CardDescription>Per-ride averages</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2.5">
+                  {[
+                    { label: "Average distance per ride", value: `${impact.ridesShared > 0 ? (impact.totalDistance / impact.ridesShared).toFixed(1) : 0} km` },
+                    { label: "CO₂ saved per ride",        value: `${impact.ridesShared > 0 ? (impact.carbonReduced / impact.ridesShared).toFixed(2) : 0} kg` },
+                    { label: "Fuel saved per ride",       value: `${impact.ridesShared > 0 ? (impact.fuelSaved / impact.ridesShared).toFixed(2) : 0} L` },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between p-3.5 bg-gray-50 rounded-xl border border-gray-100">
+                      <span className="text-sm font-medium text-foreground">{label}</span>
+                      <span className="text-sm font-bold text-primary">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Keep It Up!</CardTitle>
-            <CardDescription>
-              Every shared ride makes a difference
-            </CardDescription>
+        {/* ── Keep It Up ── */}
+        <Card className="mt-6 border-0 shadow-sm">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base font-bold">Keep It Up! 🎯</CardTitle>
+            <CardDescription>Every shared ride makes a difference</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm font-medium mb-2">🎯 Your Next Goal</p>
-                <p className="text-sm text-muted-foreground">
-                  Share {impact.ridesShared === 0 ? 'your first ride' : `10 more rides to reach ${impact.ridesShared + 10} total rides`}!
-                </p>
-              </div>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm font-medium mb-2">🌍 Global Impact</p>
-                <p className="text-sm text-muted-foreground">
-                  Join thousands of students reducing their carbon footprint through ride-sharing
-                </p>
-              </div>
-              <div className="p-4 bg-gradient-primary/10 rounded-lg border border-primary/20">
-                <p className="text-sm font-medium mb-2">💡 Did You Know?</p>
-                <p className="text-sm text-muted-foreground">
-                  If every student shared just one ride per week, we could reduce campus carbon emissions by 30%!
-                </p>
-              </div>
+          <CardContent className="space-y-3">
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+              <p className="text-sm font-semibold text-amber-800 mb-1">🎯 Your Next Goal</p>
+              <p className="text-sm text-amber-700">
+                {impact.ridesShared === 0 ? "Complete your first shared ride!" : `${10 - (impact.ridesShared % 10)} more rides to reach ${Math.ceil(impact.ridesShared / 10) * 10} total!`}
+              </p>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+              <p className="text-sm font-semibold text-blue-800 mb-1">🌍 Global Impact</p>
+              <p className="text-sm text-blue-700">Join thousands of students reducing their carbon footprint through campus ride-sharing.</p>
+            </div>
+            <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+              <p className="text-sm font-semibold text-emerald-800 mb-1">💡 Did You Know?</p>
+              <p className="text-sm text-emerald-700">If every student shared just one ride per week, campus carbon emissions could drop by 30%!</p>
             </div>
           </CardContent>
         </Card>

@@ -1,7 +1,6 @@
-
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -18,6 +17,7 @@ import LiveTracking from "./pages/LiveTracking";
 import PassengerRides from "./pages/PassengerRides";
 import ParentTracking from "./pages/ParentTracking";
 import "./App.css";
+
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -25,21 +25,26 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
+          {/* Public pages — no Navbar */}
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/become-driver" element={<BecomeDriver />} />
-          <Route path="/find-rides" element={<FindRides />} />
-          <Route path="/create-ride" element={<CreateRide />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/eco-impact" element={<EcoImpact />} />
-          <Route path="/ride-demo" element={<RideDemo />} />
-          <Route path="/my-rides" element={<MyRides />} />
-          <Route path="/passenger-rides" element={<PassengerRides />} />
+
+          {/* Full-screen map views — no Navbar */}
           <Route path="/live-tracking/:rideId" element={<LiveTracking />} />
           <Route path="/parent-tracking/:rideId" element={<ParentTracking />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
+          {/* App pages — wrapped with Navbar */}
+          <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+          <Route path="/profile" element={<Layout><Profile /></Layout>} />
+          <Route path="/become-driver" element={<Layout><BecomeDriver /></Layout>} />
+          <Route path="/find-rides" element={<Layout><FindRides /></Layout>} />
+          <Route path="/create-ride" element={<Layout><CreateRide /></Layout>} />
+          <Route path="/admin" element={<Layout><AdminDashboard /></Layout>} />
+          <Route path="/eco-impact" element={<Layout><EcoImpact /></Layout>} />
+          <Route path="/ride-demo" element={<Layout><RideDemo /></Layout>} />
+          <Route path="/my-rides" element={<Layout><MyRides /></Layout>} />
+          <Route path="/passenger-rides" element={<Layout><PassengerRides /></Layout>} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
